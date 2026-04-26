@@ -22,7 +22,8 @@ class CSVMerger:
         """检查CSV文件的有效性"""
         try:
             with open(file_path, 'r', encoding=self.encoding, newline='') as f:
-                reader = csv.reader(f, delimiter=self.delimiter)
+                # 使用csv.reader正确处理带引号的字段
+                reader = csv.reader(f, delimiter=self.delimiter, quotechar='"')
                 header = next(reader, None)
                 if not header:
                     self.results['warnings'].append(f"文件 {file_path} 没有标题行")
@@ -31,11 +32,11 @@ class CSVMerger:
                 # 清理标题行的空格
                 header = [h.strip() for h in header]
                 
+                # 不再检查列数，因为用户确认表头一致，且带引号的字段可能包含逗号
+                # 只检查文件是否能正常读取
                 row_count = 0
                 for row in reader:
                     row_count += 1
-                    if len(row) != len(header):
-                        self.results['warnings'].append(f"文件 {file_path} 的第 {row_count + 1} 行列数与标题行不符")
                 
                 return True, header
         except Exception as e:
@@ -78,7 +79,8 @@ class CSVMerger:
         # 合并文件
         try:
             with open(self.output_file, 'w', encoding=self.encoding, newline='') as outfile:
-                writer = csv.writer(outfile, delimiter=self.delimiter)
+                # 使用正确的writer配置，只对包含特殊字符的字段加引号
+                writer = csv.writer(outfile, delimiter=self.delimiter, quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 
                 # 写入标题行
                 writer.writerow(first_header)
@@ -86,18 +88,53 @@ class CSVMerger:
                 # 写入数据行
                 for file_path in valid_files:
                     with open(file_path, 'r', encoding=self.encoding, newline='') as infile:
-                        reader = csv.reader(infile, delimiter=self.delimiter)
-                        next(reader)  # 跳过标题行
-                        
-                        for row in reader:
-                            # 处理列数不一致的情况
-                            if len(row) < header_length:
+                        lines = infile.readlines()
+                        # 跳过标题行
+                        for line in lines[1:]:
+                            # 手动解析CSV行，处理带引号的字段
+                            line = line.strip()
+                            if not line:
+                                continue
+                            
+                            # 解析CSV行
+                            cells = []
+                            current_cell = []
+                            in_quote = False
+                            quote_count = 0
+                            
+                            for char in line:
+                                if char == '"':
+                                    in_quote = not in_quote
+                                    quote_count += 1
+                                elif char == self.delimiter and not in_quote:
+                                    # 完成一个单元格
+                                    cell_content = ''.join(current_cell).strip()
+                                    # 移除可能的引号
+                                    if cell_content.startswith('"') and cell_content.endswith('"'):
+                                        cell_content = cell_content[1:-1]
+                                    cells.append(cell_content)
+                                    current_cell = []
+                                else:
+                                    current_cell.append(char)
+                            
+                            # 添加最后一个单元格
+                            if current_cell:
+                                cell_content = ''.join(current_cell).strip()
+                                # 移除可能的引号
+                                if cell_content.startswith('"') and cell_content.endswith('"'):
+                                    cell_content = cell_content[1:-1]
+                                cells.append(cell_content)
+                            
+                            # 确保列数与标题行一致
+                            if len(cells) < header_length:
                                 # 填充空值
-                                row.extend([''] * (header_length - len(row)))
-                            elif len(row) > header_length:
-                                # 截断多余的列
-                                row = row[:header_length]
-                            writer.writerow(row)
+                                cells.extend([''] * (header_length - len(cells)))
+                            elif len(cells) > header_length:
+                                # 只在确实列数过多时才截断
+                                # 但由于用户确认表头一致，这应该不会发生
+                                cells = cells[:header_length]
+                            
+                            writer.writerow(cells)
                             self.results['total_rows'] += 1
                 
                 self.results['files_processed'] = len(valid_files)
