@@ -28,11 +28,14 @@ class CSVMerger:
                     self.results['warnings'].append(f"文件 {file_path} 没有标题行")
                     return False, None
                 
+                # 清理标题行的空格
+                header = [h.strip() for h in header]
+                
                 row_count = 0
                 for row in reader:
                     row_count += 1
                     if len(row) != len(header):
-                        self.results['errors'].append(f"文件 {file_path} 的第 {row_count + 1} 行列数与标题行不符")
+                        self.results['warnings'].append(f"文件 {file_path} 的第 {row_count + 1} 行列数与标题行不符")
                 
                 return True, header
         except Exception as e:
@@ -63,8 +66,11 @@ class CSVMerger:
             print("错误: 没有有效的CSV文件可以处理")
             return False
         
-        # 检查所有文件的标题行是否一致
+        # 使用第一个文件的标题行为标准
         first_header = headers[0]
+        header_length = len(first_header)
+        
+        # 检查所有文件的标题行是否一致
         for i, header in enumerate(headers[1:], 1):
             if header != first_header:
                 self.results['warnings'].append(f"文件 {valid_files[i]} 的标题行与第一个文件不一致")
@@ -84,6 +90,13 @@ class CSVMerger:
                         next(reader)  # 跳过标题行
                         
                         for row in reader:
+                            # 处理列数不一致的情况
+                            if len(row) < header_length:
+                                # 填充空值
+                                row.extend([''] * (header_length - len(row)))
+                            elif len(row) > header_length:
+                                # 截断多余的列
+                                row = row[:header_length]
                             writer.writerow(row)
                             self.results['total_rows'] += 1
                 
