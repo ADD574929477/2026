@@ -188,7 +188,7 @@ def create_college_csv():
     # 专业组04 - 只招男生，面向铁路公安机关，化学
     groups04 = [
         ('ZGXSZJXYTQBw04', '专业组04', '物理组', '提前本科批B段', '化学', 
-         'ZGXSZJXYTQBw0401', '公安视听技术（公安类）', 1, 0, 0, 0),
+         'ZGXSZJXYTQBw0401', '公安视听技术（公安类）', 1, 616, 618, 617),
     ]
     
     for g in groups04:
