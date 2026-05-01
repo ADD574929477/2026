@@ -80,19 +80,17 @@ class CSVHelper:
         """打印样本数据"""
         print(f"\n前 {min(n, len(self.rows))} 行数据：")
         for i, row in enumerate(self.rows[:n], 1):
-            print(f"  第 {i} 行: {row[-5:]}")  # 只显示最后5个字段
+            print(f"  第 {i} 行: {row[-5:]}")
 
 
 def create_college_csv():
     """创建高校招生CSV文件的模板"""
     import os
     filename = '中国刑事警察学院.csv'
-    # 删除旧文件，确保从干净的状态开始
     if os.path.exists(filename):
         os.remove(filename)
     helper = CSVHelper(filename)
     
-    # 设置表头
     headers = [
         '院校ID', '院校名称', '地区', '类型', '院校标签', '行业标签', '所属部委',
         '专业组ID', '专业组名称', '专业组类别', '批次', '选考科目', '专业ID', '专业名称',
@@ -104,7 +102,6 @@ def create_college_csv():
     ]
     helper.set_headers(headers)
     
-    # 基础数据
     base_data = {
         '院校ID': '2124',
         '院校名称': '中国刑事警察学院',
@@ -115,7 +112,6 @@ def create_college_csv():
         '所属部委': '公安部直属',
     }
     
-    # 填充0到所有分数相关字段
     for year in ['2026', '2025', '2024', '2023']:
         for field in ['计划数', '最低分', '最低位次', '平均分', '最高分', '最高位次']:
             base_data[f'{year}{field}'] = 0
@@ -166,6 +162,30 @@ def create_college_csv():
             '专业名称': g[6],
             '2025计划数': g[7],
             '专业组备注': '只招女生，面向地方公安机关入警就业',
+            '专业备注': note,
+        })
+        helper.add_row(row_data)
+    
+    # 专业组03 - 国家专项计划，只招男生
+    groups03 = [
+        ('ZGXSZJXYTQBw03', '专业组03', '物理组', '提前本科批B段', '化学', 'ZGXSZJXYTQBw0301', '刑事科学技术（公安类）', 1),
+        ('ZGXSZJXYTQBw03', '专业组03', '物理组', '提前本科批B段', '化学', 'ZGXSZJXYTQBw0302', '网络安全与执法（公安类）', 1),
+        ('ZGXSZJXYTQBw03', '专业组03', '物理组', '提前本科批B段', '化学', 'ZGXSZJXYTQBw0303', '数据警务技术（公安类）', 1),
+    ]
+    
+    for g in groups03:
+        row_data = base_data.copy()
+        row_data.update({
+            '专业组ID': g[0],
+            '专业组名称': g[1],
+            '专业组类别': g[2],
+            '批次': g[3],
+            '选考科目': g[4],
+            '专业ID': g[5],
+            '专业名称': g[6],
+            '2025计划数': g[7],
+            '专业组标签': '国家专项计划',
+            '专业组备注': '只招男生，面向地方公安机关入警就业',
             '专业备注': note,
         })
         helper.add_row(row_data)
