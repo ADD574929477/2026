@@ -4,8 +4,6 @@ with open('/workspace/清华大学.csv', 'r', encoding='utf-8') as f:
     reader = csv.reader(f)
     rows = list(reader)
 
-header = rows[0]
-
 for row in rows[1:]:
     if row[8] == '专业组99':
         row[7] = 'QHDXPAAw99'
