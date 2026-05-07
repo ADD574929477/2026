@@ -7,16 +7,13 @@ with open('/workspace/清华大学.csv', 'r', encoding='utf-8') as f:
 header = rows[0]
 
 for row in rows[1:]:
-    if row[10] == '提前本科批C段' and row[7] == 'QHDXTQCw02':
-        if row[13] == '机械工程':
-            row[23] = '1'
-            print("更新：机械工程 - 2024计划数：1")
-        elif row[13] == '核工程与核技术':
-            row[23] = '1'
-            print("更新：核工程与核技术 - 2024计划数：1")
+    if row[7] == 'QHDXPAAw99' and row[8] == '专业组99':
+        row[7] = 'QHDXTQDw99'
+        row[10] = '提前本科批D段'
+        print(f"更新：{row[13]} - 批次改为提前本科批D段")
 
 with open('/workspace/清华大学.csv', 'w', encoding='utf-8', newline='') as f:
     writer = csv.writer(f)
     writer.writerows(rows)
 
-print("清华大学2024年提前本科批C段数据已更新完成")
+print("清华大学专业组99批次已更正为提前本科批D段")
